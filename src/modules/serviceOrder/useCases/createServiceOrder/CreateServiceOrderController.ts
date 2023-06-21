@@ -4,7 +4,16 @@ import { CreateServiceOrderUseCase } from "./CreateServiceOrderUseCase";
 export class CreateServiceOrderController {
   async handle(request: Request, response: Response) {
     const { pac_reg } = request.params;
-    const { smmTpcod, smmCod, smmHonSeq, smmMed, osmCnv } = request.body;
+    const {
+      smmTpcod,
+      smmCod,
+      smmHonSeq,
+      smmMed,
+      osmCnv,
+      smmVlr,
+      smmTab,
+      smmNum,
+    } = request.body;
 
     const createServiceOrderUseCase = new CreateServiceOrderUseCase();
 
@@ -14,7 +23,10 @@ export class CreateServiceOrderController {
       smmCod,
       smmHonSeq,
       smmMed,
-      osmCnv
+      osmCnv,
+      smmVlr,
+      smmTab,
+      smmNum
     );
 
     return response.json(result);

@@ -7,7 +7,10 @@ export class CreateServiceOrderUseCase {
     smmCod: string,
     smmHonSeq: number,
     smmMed: number,
-    osmCnv: string
+    osmCnv: string,
+    smmVlr: number,
+    smmTab: string,
+    smmNum: number
   ) {
     const serviceOrderRepository = new ServiceOrderRepository();
     const serviceOrder = await serviceOrderRepository.createServiceOrder(
@@ -16,7 +19,10 @@ export class CreateServiceOrderUseCase {
       smmCod,
       smmHonSeq,
       smmMed,
-      osmCnv
+      osmCnv,
+      smmVlr,
+      smmTab,
+      smmNum
     );
 
     return serviceOrder;
