@@ -5,6 +5,6 @@ const osRouter = Router();
 
 const createServiceOrderController = new CreateServiceOrderController();
 
-osRouter.post("/:pac_reg", createServiceOrderController.handle);
+osRouter.post("/:pac_reg/create", createServiceOrderController.handle);
 
 export default osRouter;

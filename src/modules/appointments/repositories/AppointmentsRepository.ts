@@ -42,6 +42,7 @@ export class AppointmentsRepository implements IAppointmentsRepository {
         },
         SMK: {
           select: {
+            SMK_TIPO: true,
             SMK_COD: true,
             SMK_NOME: true,
           },
