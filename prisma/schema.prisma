@@ -129,8 +129,7 @@ model AGM {
   PSV_AGM_AGM_MEDToPSV           PSV       @relation("AGM_AGM_MEDToPSV", fields: [AGM_MED], references: [PSV_COD], onUpdate: NoAction, map: "agm_psv_fk")
   PSV_AGM_AGM_AUXToPSV           PSV?      @relation("AGM_AGM_AUXToPSV", fields: [AGM_AUX], references: [PSV_COD], onDelete: NoAction, onUpdate: NoAction, map: "agm_psv1_fk")
   SMK                            SMK       @relation(fields: [AGM_TPSMK, AGM_SMK], references: [SMK_TIPO, SMK_COD], onUpdate: NoAction, map: "agm_smk_fk")
-  CNV                            CNV?      @relation(fields: [cNVCNV_COD], references: [CNV_COD])
-  cNVCNV_COD                     String?   @db.Char(3)
+  CNV                            CNV?      @relation(fields: [AGM_CNV_COD], references: [CNV_COD])
 
   @@id([AGM_MED, AGM_LOC, AGM_HINI, AGM_EXT], map: "AGM_PK")
   @@index([AGM_CNV_COD, AGM_HINI], map: "agm_cnv_idx")

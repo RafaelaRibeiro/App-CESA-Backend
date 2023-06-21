@@ -10,9 +10,13 @@ export class AppointmentsRepository implements IAppointmentsRepository {
     const today = new Date();
     const startDate = startOfDay(today);
     const endDate = endOfDay(today);
+
     const appointments = await prisma.aGM.findMany({
       where: {
         AGM_PAC: Number(pac_reg),
+        NOT: {
+          AGM_STAT: "C",
+        },
         AGM_HINI: {
           gte: startDate,
           lte: endDate,
@@ -21,18 +25,30 @@ export class AppointmentsRepository implements IAppointmentsRepository {
       select: {
         AGM_PAC: true,
         AGM_HINI: true,
+        AGM_HON_SEQ: true,
+        AGM_CNV_COD: true,
+        AGM_VALOR: true,
+        CNV: {
+          select: {
+            CNV_TAB: true,
+          },
+        },
+
         PSV_AGM_AGM_MEDToPSV: {
           select: {
+            PSV_COD: true,
             PSV_NOME: true,
           },
         },
         SMK: {
           select: {
+            SMK_COD: true,
             SMK_NOME: true,
           },
         },
         PAC: {
           select: {
+            PAC_REG: true,
             PAC_NOME: true,
           },
         },
@@ -43,6 +59,13 @@ export class AppointmentsRepository implements IAppointmentsRepository {
         "Nenhum agendamento encontrado. Gentileza se dirigir à recepção"
       );
     }
-    return appointments;
+
+    const appointmentsWithAutoIncrement = appointments.map(
+      (appointment, index) => ({
+        ...appointment,
+        smmNum: index + 1,
+      })
+    );
+    return appointmentsWithAutoIncrement;
   }
 }

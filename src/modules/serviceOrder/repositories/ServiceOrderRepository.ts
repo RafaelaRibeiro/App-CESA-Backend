@@ -8,7 +8,10 @@ interface IServiceOrderRepository {
     smmCod: string,
     smmHonSeq: number,
     smmMed: number,
-    osmCnv: string
+    osmCnv: string,
+    smmVlr: number,
+    smmTab: string,
+    smmNum: number
   ): Promise<any>;
 }
 
@@ -19,14 +22,17 @@ export class ServiceOrderRepository implements IServiceOrderRepository {
     smmCod: string,
     smmHonSeq: number,
     smmMed: number,
-    osmCnv: string
+    osmCnv: string,
+    smmVlr: number,
+    smmTab: string,
+    smmNum: number
   ) {
     const now = new Date();
     now.setHours(now.getHours() - 3);
 
     const serie = this.getSeriesNumber();
     const patient = await this.getPatientByReg(pac_reg);
-    const cntOsmNew = await this.getNextOrderNumber(serie);
+    let cntOsmNew = await this.getNextOrderNumber(serie);
 
     const orderService = await this.createOrderService(
       serie,
@@ -36,7 +42,7 @@ export class ServiceOrderRepository implements IServiceOrderRepository {
       osmCnv
     );
 
-    await this.createSMMRecord(
+    await this.createServiceOrderItems(
       serie,
       cntOsmNew,
       patient,
@@ -44,7 +50,10 @@ export class ServiceOrderRepository implements IServiceOrderRepository {
       smmTpcod,
       smmCod,
       smmHonSeq,
-      smmMed
+      smmMed,
+      smmVlr,
+      smmTab,
+      smmNum
     );
 
     await this.updateCNT(serie, cntOsmNew);
@@ -77,30 +86,41 @@ export class ServiceOrderRepository implements IServiceOrderRepository {
     now: Date,
     osmCnv: string
   ) {
-    return await prisma.oSM.create({
-      data: {
-        OSM_SERIE: Number(serie),
-        OSM_PAC: patient?.PAC_REG ?? 0 + 1,
-        OSM_NUM: cntOsmNew,
-        OSM_DTHR: now,
-        OSM_CNV: osmCnv,
-        OSM_MREQ: 73597,
-        OSM_PROC: "A",
-        OSM_STR: "106", //fixo
-        OSM_IND_URG: "N",
-        OSM_DT_RESULT: now,
-        OSM_ATEND: "ASS",
-        OSM_CID_COD: "R51",
-        OSM_DT_SOLIC: now,
-        OSM_LEG_COD: "001",
-        OSM_USR_LOGIN_CAD: "ADM",
-        OSM_TIPO_ACIDENTE: 2,
-        OSM_TISS_TIPO_SAIDA: "5",
-        OSM_TISS_TIPO_ATENDE: "05",
-        OSM_MREQ_IND_SLINE: "S",
-        OSM_CNPJ_SOLIC: "57596645000156",
-      },
-    });
+    const OSM_STR = "106";
+    const OSM_MREQ = 73597;
+    const OSM_ATEND = "ASS";
+    const OSM_CID_COD = "R51";
+    const OSM_LEG_COD = "001";
+    const OSM_CNPJ_SOLIC = "57596645000156";
+    const OSM_PAC = patient?.PAC_REG ?? 0;
+    const OSM_DTHR = now;
+    const OSM_DT_RESULT = now;
+    const OSM_DT_SOLIC = now;
+
+    const osmData = {
+      OSM_SERIE: Number(serie),
+      OSM_PAC,
+      OSM_NUM: cntOsmNew,
+      OSM_DTHR,
+      OSM_CNV: osmCnv,
+      OSM_MREQ,
+      OSM_PROC: "A",
+      OSM_STR,
+      OSM_IND_URG: "N",
+      OSM_DT_RESULT,
+      OSM_ATEND,
+      OSM_CID_COD,
+      OSM_DT_SOLIC,
+      OSM_LEG_COD,
+      OSM_USR_LOGIN_CAD: "ADM",
+      OSM_TIPO_ACIDENTE: 2,
+      OSM_TISS_TIPO_SAIDA: "5",
+      OSM_TISS_TIPO_ATENDE: "05",
+      OSM_MREQ_IND_SLINE: "S",
+      OSM_CNPJ_SOLIC,
+    };
+
+    return prisma.oSM.create({ data: osmData });
   }
 
   private async updateCNT(serie: string, cntOsmNew: number) {
@@ -114,7 +134,7 @@ export class ServiceOrderRepository implements IServiceOrderRepository {
     });
   }
 
-  private async createSMMRecord(
+  private async createServiceOrderItems(
     serie: string,
     cntOsmNew: number,
     patient: any,
@@ -122,65 +142,64 @@ export class ServiceOrderRepository implements IServiceOrderRepository {
     smmTpcod: string,
     smmCod: string,
     smmHonSeq: number,
-    smmMed: number
+    smmMed: number,
+    smmVlr: number,
+    smmTab: string,
+    smmNum: number
   ) {
-    let smmNum = 1;
-    await prisma.sMM.createMany({
-      data: [
-        {
-          SMM_OSM_SERIE: Number(serie),
-          SMM_OSM: cntOsmNew,
-          SMM_PAC_REG: patient?.PAC_REG ?? 0 + 1,
-          SMM_NUM: smmNum,
-          SMM_TPCOD: smmTpcod,
-          SMM_COD: smmCod,
-          SMM_DTHR_EXEC: now,
-          SMM_QT: 1,
-          SMM_EXEC: "A",
-          SMM_SFAT: "A",
-          SMM_REP: "ADM",
-          SMM_STR: "206",
-          SMM_MED: smmMed,
-          SMM_VLCH: 0,
-          SMM_VLR: 51,
-          SMM_HON_SEQ: smmHonSeq,
-          SMM_HORA_ESP: "N",
-          SMM_ESP: "32",
-          SMM_TIPO_FATURA: "E",
-          SMM_USR_LOGIN_LANC: "ADM",
-          SMM_DTHR_LANC: now,
-          SMM_DTHR_ALTER: now,
-          SMM_DT_RESULT: now,
-          SMM_TAB_COD: "CRE",
-          SMM_COD_AMOSTRA: `AN:${serie}.${cntOsmNew}-1`,
-
-          // RCL: {
-          //   create: {
-          //     RCL_PAC: patient?.PAC_REG ?? 0 + 1,
-          //     RCL_TPCOD: "S",
-          //     RCL_COD: "40901300",
-          //     RCL_DTHR: now,
-          //     RCL_MED: 96679,
-          //   },
-          // },
-        },
-      ],
-    });
-
-    await prisma.rCL.createMany({
-      data: [
-        {
-          RCL_PAC: patient?.PAC_REG ?? 0 + 1,
-          RCL_TPCOD: smmTpcod,
-          RCL_COD: smmCod,
-          RCL_DTHR: now,
-          RCL_OSM_SERIE: Number(serie),
-          RCL_OSM: cntOsmNew,
-          RCL_SMM: smmNum,
-          RCL_MED: smmMed,
-        },
-      ],
-    });
-    smmNum++;
+    const SMM_EXEC = "A";
+    const SMM_SFAT = "A";
+    const SMM_STR = "206";
+    const SMM_ESP = "32";
+    const SMM_TIPO_FATURA = "E";
+    const SMM_USR_LOGIN_LANC = "ADM";
+    const SMM_PAC_REG = patient?.PAC_REG ?? 0;
+    await Promise.all([
+      prisma.sMM.createMany({
+        data: [
+          {
+            SMM_OSM_SERIE: Number(serie),
+            SMM_OSM: cntOsmNew,
+            SMM_PAC_REG,
+            SMM_NUM: smmNum,
+            SMM_TPCOD: smmTpcod,
+            SMM_COD: smmCod,
+            SMM_DTHR_EXEC: now,
+            SMM_QT: 1,
+            SMM_EXEC,
+            SMM_SFAT,
+            SMM_REP: "ADM",
+            SMM_STR,
+            SMM_MED: smmMed,
+            SMM_VLCH: 0,
+            SMM_VLR: smmVlr,
+            SMM_HON_SEQ: smmHonSeq,
+            SMM_HORA_ESP: "N",
+            SMM_ESP,
+            SMM_TIPO_FATURA,
+            SMM_USR_LOGIN_LANC,
+            SMM_DTHR_LANC: now,
+            SMM_DTHR_ALTER: now,
+            SMM_DT_RESULT: now,
+            SMM_TAB_COD: smmTab,
+            SMM_COD_AMOSTRA: `AN:${serie}.${cntOsmNew}-1`,
+          },
+        ],
+      }),
+      prisma.rCL.createMany({
+        data: [
+          {
+            RCL_PAC: (patient?.PAC_REG ?? 0) + 1,
+            RCL_TPCOD: smmTpcod,
+            RCL_COD: smmCod,
+            RCL_DTHR: now,
+            RCL_OSM_SERIE: Number(serie),
+            RCL_OSM: cntOsmNew,
+            RCL_SMM: smmNum,
+            RCL_MED: smmMed,
+          },
+        ],
+      }),
+    ]);
   }
 }
