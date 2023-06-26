@@ -129,7 +129,7 @@ model AGM {
   PSV_AGM_AGM_MEDToPSV           PSV       @relation("AGM_AGM_MEDToPSV", fields: [AGM_MED], references: [PSV_COD], onUpdate: NoAction, map: "agm_psv_fk")
   PSV_AGM_AGM_AUXToPSV           PSV?      @relation("AGM_AGM_AUXToPSV", fields: [AGM_AUX], references: [PSV_COD], onDelete: NoAction, onUpdate: NoAction, map: "agm_psv1_fk")
   SMK                            SMK       @relation(fields: [AGM_TPSMK, AGM_SMK], references: [SMK_TIPO, SMK_COD], onUpdate: NoAction, map: "agm_smk_fk")
-  CNV                            CNV?      @relation(fields: [AGM_CNV_COD], references: [CNV_COD])
+  CNV                            CNV?      @relation(fields: [AGM_CNV_COD], references: [CNV_COD], onUpdate: NoAction, map: "agm_cnv_fk")
 
   @@id([AGM_MED, AGM_LOC, AGM_HINI, AGM_EXT], map: "AGM_PK")
   @@index([AGM_CNV_COD, AGM_HINI], map: "agm_cnv_idx")
@@ -564,22 +564,18 @@ model OSM {
   osm_status_confirmacao         String?   @db.VarChar(25)
   osm_id_integra                 String?   @db.VarChar(100)
   osm_tp_ident_benef             String?   @db.Char(2)
-  osm_utc                        String?   @db.VarChar(20)
-  osm_ind_verao                  String?   @db.Char(1)
   osm_regime_atend               String?   @db.Char(3)
   osm_saude_ocup                 String?   @db.Char(3)
-  osm_cobertura_esp              String?   @db.Char(3)
 
   PAC PAC @relation(fields: [OSM_PAC], references: [PAC_REG], onUpdate: NoAction, map: "osm_pac_fk")
 
-  SMM                          SMM[]
-  PSV                          PSV?  @relation(fields: [pSVPSV_COD], references: [PSV_COD])
-  pSVPSV_COD                   Int?
-  PSV_OSM_OSM_MREQToPSV        PSV   @relation("OSM_OSM_MREQToPSV", fields: [OSM_MREQ], references: [PSV_COD], onUpdate: NoAction, map: "osm_psv_fk")
-  PSV_OSM_OSM_MREQ_2ToPSV      PSV?  @relation("OSM_OSM_MREQ_2ToPSV", fields: [OSM_MREQ_2], references: [PSV_COD], onDelete: NoAction, onUpdate: NoAction, map: "osm_psv_fk2")
-  PSV_OSM_OSM_MREQ_3ToPSV      PSV?  @relation("OSM_OSM_MREQ_3ToPSV", fields: [OSM_MREQ_3], references: [PSV_COD], onDelete: NoAction, onUpdate: NoAction, map: "osm_psv_fk3")
-  CNV_OSM_OSM_CML_CNV_CODToCNV CNV?  @relation("OSM_OSM_CML_CNV_CODToCNV", fields: [OSM_CML_CNV_COD], references: [CNV_COD], onDelete: NoAction, onUpdate: NoAction, map: "osm_cnv_cml_fk")
-  CNV_OSM_OSM_CNVToCNV         CNV   @relation("OSM_OSM_CNVToCNV", fields: [OSM_CNV], references: [CNV_COD], onUpdate: NoAction, map: "osm_cnv_fk")
+  SMM SMM[]
+
+  PSV_OSM_OSM_MREQToPSV        PSV  @relation("OSM_OSM_MREQToPSV", fields: [OSM_MREQ], references: [PSV_COD], onUpdate: NoAction, map: "osm_psv_fk")
+  PSV_OSM_OSM_MREQ_2ToPSV      PSV? @relation("OSM_OSM_MREQ_2ToPSV", fields: [OSM_MREQ_2], references: [PSV_COD], onDelete: NoAction, onUpdate: NoAction, map: "osm_psv_fk2")
+  PSV_OSM_OSM_MREQ_3ToPSV      PSV? @relation("OSM_OSM_MREQ_3ToPSV", fields: [OSM_MREQ_3], references: [PSV_COD], onDelete: NoAction, onUpdate: NoAction, map: "osm_psv_fk3")
+  CNV_OSM_OSM_CML_CNV_CODToCNV CNV? @relation("OSM_OSM_CML_CNV_CODToCNV", fields: [OSM_CML_CNV_COD], references: [CNV_COD], onDelete: NoAction, onUpdate: NoAction, map: "osm_cnv_cml_fk")
+  CNV_OSM_OSM_CNVToCNV         CNV  @relation("OSM_OSM_CNVToCNV", fields: [OSM_CNV], references: [CNV_COD], onUpdate: NoAction, map: "osm_cnv_fk")
 
   @@id([OSM_SERIE, OSM_NUM], map: "OSM_PK")
   @@index([OSM_PAC, OSM_HSP_NUM], map: "ix_IndexName")
@@ -1030,11 +1026,9 @@ model RCL {
   rcl_ind_interno            String?   @db.Char(1)
   RCL_BLOQUEIO               String?   @db.Char(1)
 
-  SMM         SMM?    @relation(fields: [RCL_OSM_SERIE, RCL_OSM, RCL_SMM], references: [SMM_OSM_SERIE, SMM_OSM, SMM_NUM], onDelete: NoAction, onUpdate: NoAction, map: "rcl_osm_fk")
-  PAC         PAC     @relation(fields: [RCL_PAC], references: [PAC_REG], onUpdate: NoAction, map: "rcl_pac_fk")
-  SMK         SMK?    @relation(fields: [sMKSMK_TIPO, sMKSMK_COD], references: [SMK_TIPO, SMK_COD])
-  sMKSMK_TIPO String? @db.Char(1)
-  sMKSMK_COD  String? @db.Char(8)
+  SMM SMM? @relation(fields: [RCL_OSM_SERIE, RCL_OSM, RCL_SMM], references: [SMM_OSM_SERIE, SMM_OSM, SMM_NUM], onDelete: NoAction, onUpdate: NoAction, map: "rcl_osm_fk")
+  PAC PAC  @relation(fields: [RCL_PAC], references: [PAC_REG], onUpdate: NoAction, map: "rcl_pac_fk")
+  SMK SMK? @relation(fields: [RCL_TPCOD, RCL_COD], references: [SMK_TIPO, SMK_COD])
 
   @@id([RCL_PAC, RCL_TPCOD, RCL_COD, RCL_DTHR], map: "RCL_PK")
   @@index([RCL_STAT], map: "ix_Idxrcl")
@@ -1502,14 +1496,13 @@ model SMM {
 
   RCL RCL[]
 
-  OSM                                           OSM     @relation(fields: [SMM_OSM_SERIE, SMM_OSM], references: [OSM_SERIE, OSM_NUM], onUpdate: NoAction, map: "smm_osm_fk")
-  PAC                                           PAC?    @relation(fields: [SMM_PAC_REG], references: [PAC_REG], onDelete: NoAction, onUpdate: NoAction, map: "smm_pac_fk")
-  PSV_SMM_SMM_MEDToPSV                          PSV     @relation("SMM_SMM_MEDToPSV", fields: [SMM_MED], references: [PSV_COD], onUpdate: NoAction, map: "smm_psv_fk")
-  PSV_SMM_SMM_AUXToPSV                          PSV?    @relation("SMM_SMM_AUXToPSV", fields: [SMM_AUX], references: [PSV_COD], onDelete: NoAction, onUpdate: NoAction, map: "smm_psv1_fk")
-  SMK_SMM_SMM_TPCOD_SMM_CODToSMK                SMK     @relation("SMM_SMM_TPCOD_SMM_CODToSMK", fields: [SMM_TPCOD, SMM_COD], references: [SMK_TIPO, SMK_COD], onUpdate: NoAction, map: "smm_smk_fk")
-  SMK_SMM_SMM_PAI_SMK_TIPO_SMM_PAI_SMK_CODToSMK SMK?    @relation("SMM_SMM_PAI_SMK_TIPO_SMM_PAI_SMK_CODToSMK", fields: [SMM_PAI_SMK_TIPO, SMM_PAI_SMK_COD], references: [SMK_TIPO, SMK_COD], onDelete: NoAction, onUpdate: NoAction, map: "smm_smk1_fk")
-  CNV                                           CNV?    @relation(fields: [cNVCNV_COD], references: [CNV_COD])
-  cNVCNV_COD                                    String? @db.Char(3)
+  OSM                                           OSM  @relation(fields: [SMM_OSM_SERIE, SMM_OSM], references: [OSM_SERIE, OSM_NUM], onUpdate: NoAction, map: "smm_osm_fk")
+  PAC                                           PAC? @relation(fields: [SMM_PAC_REG], references: [PAC_REG], onDelete: NoAction, onUpdate: NoAction, map: "smm_pac_fk")
+  PSV_SMM_SMM_MEDToPSV                          PSV  @relation("SMM_SMM_MEDToPSV", fields: [SMM_MED], references: [PSV_COD], onUpdate: NoAction, map: "smm_psv_fk")
+  PSV_SMM_SMM_AUXToPSV                          PSV? @relation("SMM_SMM_AUXToPSV", fields: [SMM_AUX], references: [PSV_COD], onDelete: NoAction, onUpdate: NoAction, map: "smm_psv1_fk")
+  SMK_SMM_SMM_TPCOD_SMM_CODToSMK                SMK  @relation("SMM_SMM_TPCOD_SMM_CODToSMK", fields: [SMM_TPCOD, SMM_COD], references: [SMK_TIPO, SMK_COD], onUpdate: NoAction, map: "smm_smk_fk")
+  SMK_SMM_SMM_PAI_SMK_TIPO_SMM_PAI_SMK_CODToSMK SMK? @relation("SMM_SMM_PAI_SMK_TIPO_SMM_PAI_SMK_CODToSMK", fields: [SMM_PAI_SMK_TIPO, SMM_PAI_SMK_COD], references: [SMK_TIPO, SMK_COD], onDelete: NoAction, onUpdate: NoAction, map: "smm_smk1_fk")
+  CNV                                           CNV? @relation(fields: [SMM_CNV_COD], references: [CNV_COD])
 
   @@id([SMM_OSM_SERIE, SMM_OSM, SMM_NUM], map: "SMM_PK")
   @@index([SMM_COD_EXTERNO], map: "idx_smm_cod_ext")
@@ -1710,7 +1703,6 @@ model PSV {
 
   SMM_SMM_SMM_MEDToPSV SMM[] @relation("SMM_SMM_MEDToPSV")
   SMM_SMM_SMM_AUXToPSV SMM[] @relation("SMM_SMM_AUXToPSV")
-  OSM                  OSM[]
 
   SMK_SMK_SMK_PSV_EXE_DEFAULTToPSV SMK[] @relation("SMK_SMK_PSV_EXE_DEFAULTToPSV")
   CNV_CNV_CNV_PSV_FAT_DEFAULTToPSV CNV[] @relation("CNV_CNV_PSV_FAT_DEFAULTToPSV")

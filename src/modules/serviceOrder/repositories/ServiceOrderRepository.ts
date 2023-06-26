@@ -9,7 +9,7 @@ interface IServiceOrderRepository {
     smmHonSeq: number,
     smmMed: number,
     osmCnv: string,
-    smmVlr: number,
+    smmVlr: string,
     smmTab: string,
     smmNum: number
   ): Promise<any>;
@@ -23,7 +23,7 @@ export class ServiceOrderRepository implements IServiceOrderRepository {
     smmHonSeq: number,
     smmMed: number,
     osmCnv: string,
-    smmVlr: number,
+    smmVlr: string,
     smmTab: string,
     smmNum: number
   ) {
@@ -34,8 +34,8 @@ export class ServiceOrderRepository implements IServiceOrderRepository {
     const cntOsm = await prisma.cNT.findFirst({
       where: { CNT_SERIE: Number(serie), CNT_TIPO: "OSM" },
     });
-
-    const cntOsmNew = cntOsm?.CNT_NUM ?? 0 + 1;
+    let osNum = cntOsm?.CNT_NUM ? cntOsm.CNT_NUM : 0;
+    const cntOsmNew = osNum + 1;
 
     const orderService = await prisma.oSM.create({
       data: {
@@ -71,51 +71,44 @@ export class ServiceOrderRepository implements IServiceOrderRepository {
       },
     });
 
-    await prisma.sMM.createMany({
-      data: [
-        {
-          SMM_OSM_SERIE: Number(serie),
-          SMM_OSM: cntOsmNew,
-          SMM_PAC_REG: Number(pac_reg),
-          SMM_NUM: smmNum,
-          SMM_TPCOD: smmTpcod,
-          SMM_COD: smmCod,
-          SMM_DTHR_EXEC: now,
-          SMM_QT: 1,
-          SMM_EXEC: "A",
-          SMM_SFAT: "A",
-          SMM_REP: "ADM",
-          SMM_STR: "206",
-          SMM_MED: smmMed,
-          SMM_VLCH: 0,
-          SMM_VLR: smmVlr,
-          SMM_HON_SEQ: smmHonSeq,
-          SMM_HORA_ESP: "N",
-          SMM_ESP: "32",
-          SMM_TIPO_FATURA: "E",
-          SMM_USR_LOGIN_LANC: "ADM",
-          SMM_DTHR_LANC: now,
-          SMM_DTHR_ALTER: now,
-          SMM_DT_RESULT: now,
-          SMM_TAB_COD: smmTab,
-          SMM_COD_AMOSTRA: `AN:${serie}.${cntOsmNew}-1`,
+    await prisma.sMM.create({
+      data: {
+        SMM_OSM_SERIE: Number(serie),
+        SMM_OSM: cntOsmNew,
+        SMM_PAC_REG: Number(pac_reg),
+        SMM_NUM: smmNum,
+        SMM_TPCOD: smmTpcod,
+        SMM_COD: smmCod,
+        SMM_DTHR_EXEC: now,
+        SMM_QT: 1,
+        SMM_EXEC: "A",
+        SMM_SFAT: "A",
+        SMM_REP: "ADM",
+        SMM_STR: "206",
+        SMM_MED: smmMed,
+        SMM_VLCH: 0,
+        SMM_VLR: parseFloat(smmVlr),
+        SMM_HON_SEQ: smmHonSeq,
+        SMM_HORA_ESP: "N",
+        SMM_ESP: "32",
+        SMM_TIPO_FATURA: "E",
+        SMM_USR_LOGIN_LANC: "ADM",
+        SMM_DTHR_LANC: now,
+        SMM_DTHR_ALTER: now,
+        SMM_DT_RESULT: now,
+        SMM_TAB_COD: smmTab,
+        SMM_COD_AMOSTRA: `AN:${serie}.${cntOsmNew}-1`,
+        RCL: {
+          create: {
+            RCL_PAC: Number(pac_reg),
+            RCL_TPCOD: smmTpcod,
+            RCL_COD: smmCod,
+            RCL_DTHR: now,
+            RCL_MED: smmMed,
+            RCL_STAT: "A",
+          },
         },
-      ],
-    });
-
-    await prisma.rCL.createMany({
-      data: [
-        {
-          RCL_PAC: Number(pac_reg),
-          RCL_TPCOD: smmTpcod,
-          RCL_COD: smmCod,
-          RCL_DTHR: now,
-          RCL_OSM_SERIE: Number(serie),
-          RCL_OSM: cntOsmNew,
-          RCL_SMM: smmNum,
-          RCL_MED: smmMed,
-        },
-      ],
+      },
     });
 
     return orderService;

@@ -8,7 +8,7 @@ export class CreateServiceOrderUseCase {
     smmHonSeq: number,
     smmMed: number,
     osmCnv: string,
-    smmVlr: number,
+    smmVlr: string,
     smmTab: string,
     smmNum: number
   ) {
