@@ -1,23 +1,8 @@
-import { PatientRepository } from "modules/patient/repositories/PatientRepository";
 import { prisma } from "shared/infra/prisma/prisma";
 
-interface IServiceOrderRepository {
-  createServiceOrder(
-    pac_reg: string,
-    smmTpcod: string,
-    smmCod: string,
-    smmHonSeq: number,
-    smmMed: number,
-    osmCnv: string,
-    smmVlr: string,
-    smmTab: string,
-    smmNum: number
-  ): Promise<any>;
-}
-
-export class ServiceOrderRepository implements IServiceOrderRepository {
+export class ServiceOrderRepository {
   async createServiceOrder(
-    pac_reg: string,
+    pac_reg: number,
     smmTpcod: string,
     smmCod: string,
     smmHonSeq: number,
@@ -25,7 +10,8 @@ export class ServiceOrderRepository implements IServiceOrderRepository {
     osmCnv: string,
     smmVlr: string,
     smmTab: string,
-    smmNum: number
+    smmNum: number,
+    agmHini: Date
   ) {
     const now = new Date();
     now.setHours(now.getHours() - 3);
@@ -50,7 +36,7 @@ export class ServiceOrderRepository implements IServiceOrderRepository {
         OSM_IND_URG: "N",
         OSM_DT_RESULT: now,
         OSM_ATEND: "ASS",
-        OSM_CID_COD: "ZOO",
+        OSM_CID_COD: "Z000",
         OSM_DT_SOLIC: now,
         OSM_LEG_COD: "001",
         OSM_USR_LOGIN_CAD: "ADM",
@@ -71,10 +57,45 @@ export class ServiceOrderRepository implements IServiceOrderRepository {
       },
     });
 
-    await prisma.sMM.create({
+    const smmItem = await this.createSMMItem(
+      Number(serie),
+      cntOsmNew,
+      pac_reg,
+      smmTpcod,
+      smmCod,
+      smmHonSeq,
+      smmMed,
+      osmCnv,
+      smmVlr,
+      smmTab,
+      smmNum,
+      agmHini
+    );
+
+    return { orderService, smmItem };
+  }
+
+  async createSMMItem(
+    osmSerie: number,
+    osmNum: number,
+    pac_reg: number,
+    smmTpcod: string,
+    smmCod: string,
+    smmHonSeq: number,
+    smmMed: number,
+    osmCnv: string,
+    smmVlr: string,
+    smmTab: string,
+    smmNum: number,
+    agmHini: Date
+  ) {
+    const now = new Date();
+    now.setHours(now.getHours() - 3);
+
+    const smmItem = await prisma.sMM.create({
       data: {
-        SMM_OSM_SERIE: Number(serie),
-        SMM_OSM: cntOsmNew,
+        SMM_OSM_SERIE: osmSerie,
+        SMM_OSM: osmNum,
         SMM_PAC_REG: Number(pac_reg),
         SMM_NUM: smmNum,
         SMM_TPCOD: smmTpcod,
@@ -97,7 +118,23 @@ export class ServiceOrderRepository implements IServiceOrderRepository {
         SMM_DTHR_ALTER: now,
         SMM_DT_RESULT: now,
         SMM_TAB_COD: smmTab,
-        SMM_COD_AMOSTRA: `AN:${serie}.${cntOsmNew}-1`,
+        SMM_COD_AMOSTRA: `AN:${osmSerie}.${osmNum}-${smmNum}`,
+        FLE: {
+          create: {
+            FLE_DTHR_CHEGADA: now,
+            FLE_PSV_COD: smmMed,
+            FLE_STR_COD: "106",
+            FLE_PAC_REG: Number(pac_reg),
+            FLE_ORDEM: 1,
+            FLE_STATUS: "A",
+            FLE_DTHR_MARCADA: agmHini,
+            FLE_USR_LOGIN: "ADM",
+            FLE_OBS: "AUTO ATENDIMENTO",
+            FLE_PSV_RESP: smmMed,
+            FLE_DTHR_REG: now,
+            FLE_PROCED: "OS",
+          },
+        },
         RCL: {
           create: {
             RCL_PAC: Number(pac_reg),
@@ -111,6 +148,6 @@ export class ServiceOrderRepository implements IServiceOrderRepository {
       },
     });
 
-    return orderService;
+    return smmItem;
   }
 }
